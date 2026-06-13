@@ -75,10 +75,25 @@ class MainViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
         if let user = DrinkData.loadUser() {
-            welcomeTitleLabel.text = "\(user.name)님, 반가워요! ☕️"
+            welcomeTitleLabel.text = "\(user.name)님, 반가워요!"
         } else {
-            welcomeTitleLabel.text = "반가워요! ☕️"
+            welcomeTitleLabel.text = "반가워요!"
+        }
+        
+        updateButtonBorders()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateButtonBorders()
+    }
+
+    private func updateButtonBorders() {
+        let buttons = [analysisButton, recordButton, statisticButton, infoButton, mypageButton]
+        buttons.forEach { button in
+            button.layer.borderColor = Colors.border.cgColor
         }
     }
 
@@ -99,14 +114,18 @@ class MainViewController: UIViewController {
         welcomeSubtitleLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let row1 = UIStackView(arrangedSubviews: [analysisButton, recordButton])
-        let row2 = UIStackView(arrangedSubviews: [statisticButton, infoButton])
-        let row3 = UIStackView(arrangedSubviews: [mypageButton])
+        row1.axis = .horizontal
+        row1.spacing = 14
+        row1.distribution = .fillEqually
         
-        [row1, row2, row3].forEach {
-            $0.axis = .horizontal
-            $0.spacing = 14
-            $0.distribution = .fillEqually
-        }
+        let row2 = UIStackView(arrangedSubviews: [statisticButton, infoButton])
+        row2.axis = .horizontal
+        row2.spacing = 14
+        row2.distribution = .fillEqually
+        
+        let row3 = UIStackView(arrangedSubviews: [mypageButton])
+        row3.axis = .horizontal
+        row3.distribution = .fill
         
         let menuStackView = UIStackView(arrangedSubviews: [row1, row2, row3])
         menuStackView.axis = .vertical
@@ -190,7 +209,6 @@ class MainViewController: UIViewController {
         button.backgroundColor = .secondarySystemBackground
         button.layer.cornerRadius = 14
         button.layer.borderWidth = 1.0
-        button.layer.borderColor = Colors.border.cgColor
         
         let titleLabel = UILabel()
         titleLabel.text = title
