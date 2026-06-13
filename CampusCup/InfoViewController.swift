@@ -49,12 +49,13 @@ class InfoViewController: UIViewController {
     }()
 
     private var drinkList: [(name: String, caffeine: Int, customImage: UIImage?)] = []
+    private let customDrinksKey = "custom_drinks_history_key"
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
-        initInitialData()
+        loadAllDrinksData()
         setupUI()
         setupCollectionView()
         
@@ -62,9 +63,39 @@ class InfoViewController: UIViewController {
         totalAddButton.addTarget(self, action: #selector(addNewDrinkPopup), for: .touchUpInside)
     }
 
-    private func initInitialData() {
+    private func loadAllDrinksData() {
+        drinkList.removeAll()
+        
         DrinkData.drinks.forEach { drink in
             drinkList.append((name: drink.name, caffeine: drink.caffeineAmount, customImage: nil))
+        }
+        
+        if let savedData = UserDefaults.standard.data(forKey: customDrinksKey),
+           let decodedList = try? JSONDecoder().decode([CustomDrinkSavedModel].self, from: savedData) {
+            decodedList.forEach { savedDrink in
+                var loadedImage: UIImage? = nil
+                if let imageData = savedDrink.pngImageData {
+                    loadedImage = UIImage(data: imageData)
+                }
+                drinkList.append((name: savedDrink.name, caffeine: savedDrink.caffeine, customImage: loadedImage))
+            }
+        }
+    }
+
+    private func saveCustomDrinkToStorage(name: String, caffeine: Int, image: UIImage?) {
+        var currentSavedList: [CustomDrinkSavedModel] = []
+        
+        if let savedData = UserDefaults.standard.data(forKey: customDrinksKey),
+           let decodedList = try? JSONDecoder().decode([CustomDrinkSavedModel].self, from: savedData) {
+            currentSavedList = decodedList
+        }
+        
+        let imageData = image?.pngData()
+        let newSavedDrink = CustomDrinkSavedModel(name: name, caffeine: caffeine, pngImageData: imageData)
+        currentSavedList.append(newSavedDrink)
+        
+        if let encoded = try? JSONEncoder().encode(currentSavedList) {
+            UserDefaults.standard.set(encoded, forKey: customDrinksKey)
         }
     }
 
@@ -161,6 +192,8 @@ extension InfoViewController: UIImagePickerControllerDelegate, UINavigationContr
             let selectedImage = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage
             
             self.drinkList.append((name: self.temporaryName, caffeine: self.temporaryCaffeine, customImage: selectedImage))
+            self.saveCustomDrinkToStorage(name: self.temporaryName, caffeine: self.temporaryCaffeine, image: selectedImage)
+            
             self.collectionView.reloadData()
             
             self.temporaryName = ""
@@ -192,6 +225,12 @@ extension InfoViewController: UICollectionViewDataSource, UICollectionViewDelega
         let width = (collectionView.frame.width - 14) / 2
         return CGSize(width: width, height: 150)
     }
+}
+
+struct CustomDrinkSavedModel: Codable {
+    let name: String
+    let caffeine: Int
+    let pngImageData: Data?
 }
 
 final class DrinkGridCell: UICollectionViewCell {

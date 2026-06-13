@@ -42,7 +42,7 @@ class MainViewController: UIViewController {
 
     private let welcomeSubtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "오늘도 캠퍼스컵과 함께\n건강한 카페인 루틴을 만들어보세요."
+        label.text = "오늘도 CampusCup과 함께\n건강한 카페인 루틴을 만들어보세요."
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = Colors.text
         label.numberOfLines = 0
